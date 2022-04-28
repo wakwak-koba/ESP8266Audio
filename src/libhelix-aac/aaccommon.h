@@ -50,8 +50,8 @@
 #include <pgmspace.h>
 
 // Can't fit in ESP8266 RAM
-#ifndef ESP8266
-  #define AAC_ENABLE_SBR 1 
+#if defined(ESP8266) && defined(AAC_ENABLE_SBR)
+  #undef AAC_ENABLE_SBR
 #endif
 
 #pragma GCC optimize ("O3")
