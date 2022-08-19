@@ -90,7 +90,7 @@ int op_test(OpusHead *_head,
   ogg_sync_init(&oy);
   data=ogg_sync_buffer(&oy,(long)_initial_bytes);
   if(data!=NULL){
-    ogg_stream_state *os = (ogg_stream_state*)malloc(sizeof(ogg_stream_state));
+    ogg_stream_state *os = (ogg_stream_state*)_ogg_malloc(sizeof(ogg_stream_state));
     ogg_page         og;
     int              ret;
     memcpy(data,_initial_data,_initial_bytes);
@@ -836,7 +836,7 @@ static int op_find_initial_pcm_offset(OggOpusFile *_of,
   ogg_int64_t  cur_page_gp;
   ogg_uint32_t serialno;
   opus_int32   total_duration;
-  int          *durations = (int*)malloc(255 * sizeof(int));
+  int          *durations = (int*)_ogg_malloc(255 * sizeof(int));
   int          cur_page_eos;
   int          op_count;
   int          pi;
@@ -1403,7 +1403,7 @@ static int op_open_seekable2_impl(OggOpusFile *_of){
   /*64 seek records should be enough for anybody.
     Actually, with a bisection search in a 63-bit range down to OP_CHUNK_SIZE
      granularity, much more than enough.*/
-  OpusSeekRecord *sr = (OpusSeekRecord*)malloc(64 * sizeof(OpusSeekRecord));
+  OpusSeekRecord *sr = (OpusSeekRecord*)_ogg_malloc(64 * sizeof(OpusSeekRecord));
   opus_int64     data_offset;
   int            ret;
   /*We can seek, so set out learning all about this file.*/
@@ -1430,7 +1430,7 @@ static int op_open_seekable2_impl(OggOpusFile *_of){
 
 static int op_open_seekable2(OggOpusFile *_of){
   ogg_sync_state    oy_start;
-  ogg_stream_state  *os_start = (ogg_stream_state*)malloc(sizeof(ogg_stream_state));
+  ogg_stream_state  *os_start = (ogg_stream_state*)_ogg_malloc(sizeof(ogg_stream_state));
   ogg_packet       *op_start;
   opus_int64        prev_page_offset;
   opus_int64        start_offset;
@@ -1995,7 +1995,7 @@ static int op_fetch_and_process_page(OggOpusFile *_of,
     ogg_stream_pagein(&_of->os,&og);
     if(OP_LIKELY(_of->ready_state>=OP_INITSET)){
       opus_int32 total_duration;
-      int        *durations = (int*)malloc(255 * sizeof(int));
+      int        *durations = (int*)_ogg_malloc(255 * sizeof(int));
       int        op_count;
       int        report_hole;
       report_hole=0;
@@ -2785,7 +2785,7 @@ static int op_init_buffer(OggOpusFile *_of){
   else nchannels_max=OP_NCHANNELS_MAX;
   _of->od_buffer=(op_sample *)_ogg_malloc(
    sizeof(*_of->od_buffer)*nchannels_max*120*48);
-  if(_of->od_buffer==NULL)return OP_EFAULT;
+  if(_of->od_buffer==NULL)return -(sizeof(*_of->od_buffer)*nchannels_max*120*48);
   return 0;
 }
 
