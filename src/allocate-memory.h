@@ -3,6 +3,7 @@
 
 #if defined(ESP32)
   #include <esp_heap_caps.h>
+  #include <string.h>  
 
   #define __malloc(s)  heap_caps_malloc(s, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT)
   
