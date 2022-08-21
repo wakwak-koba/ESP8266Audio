@@ -23,6 +23,7 @@
 
 
 #include "AudioGeneratorTalkie.h"
+#include "allocate-memory.h"
 
 AudioGeneratorTalkie::AudioGeneratorTalkie()
 {
@@ -44,7 +45,7 @@ bool AudioGeneratorTalkie::say(const uint8_t *data, size_t len, bool async) {
     loop();
     delay(0);
   }
-  buff = (uint8_t*)realloc(buff, len);
+  buff = (uint8_t*)__realloc(buff, len);
   if (!buff) return false;
   memcpy_P(buff, data, len);
 
@@ -75,7 +76,7 @@ bool AudioGeneratorTalkie::begin(AudioFileSource *source, AudioOutput *output)
     file = source;
     if (!file->isOpen()) return false; // Error
     auto len = file->getSize();
-    uint8_t *temp = (uint8_t *)malloc(len);
+    uint8_t *temp = (uint8_t *)__malloc(len);
     if (!temp) return false;
     if (file->read(temp, len) != (uint32_t)len) return false;
     say(temp, len);

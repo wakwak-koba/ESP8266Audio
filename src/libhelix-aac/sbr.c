@@ -51,6 +51,7 @@
 #endif
 
 #include "sbr.h"
+#include "../allocate-memory.h"
 
 /**************************************************************************************
  * Function:    InitSBRState
@@ -104,7 +105,7 @@ int InitSBR(AACDecInfo *aacDecInfo)
 		return ERR_AAC_NULL_POINTER;
 
 	/* allocate SBR state structure */
-	psi = (PSInfoSBR *)malloc(sizeof(PSInfoSBR));
+	psi = (PSInfoSBR *)__malloc(sizeof(PSInfoSBR));
 	if (!psi) {
 		printf("OOM in SBR, can't allocate %d bytes\n", sizeof(PSInfoSBR));
 		return ERR_AAC_SBR_INIT;

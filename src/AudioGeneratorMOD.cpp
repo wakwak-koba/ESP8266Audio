@@ -20,6 +20,7 @@
 #define PGM_READ_UNALIGNED 0
 
 #include "AudioGeneratorMOD.h"
+#include "allocate-memory.h"
 
 /* 
    Ported/hacked out from STELLARPLAYER by Ronen K.
@@ -129,7 +130,7 @@ bool AudioGeneratorMOD::begin(AudioFileSource *source, AudioOutput *out)
   UpdateAmiga();
 
   for (int i = 0; i < CHANNELS; i++) {
-    FatBuffer.channels[i] = reinterpret_cast<uint8_t*>(calloc(fatBufferSize, 1));
+    FatBuffer.channels[i] = reinterpret_cast<uint8_t*>(__calloc(fatBufferSize, 1));
     if (!FatBuffer.channels[i]) {
       stop();
       return false;

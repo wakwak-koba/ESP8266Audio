@@ -19,6 +19,7 @@
 */
 
 #include <AudioGeneratorOpus.h>
+#include "allocate-memory.h"
 
 AudioGeneratorOpus::AudioGeneratorOpus()
 {
@@ -41,7 +42,7 @@ AudioGeneratorOpus::~AudioGeneratorOpus()
 
 bool AudioGeneratorOpus::begin(AudioFileSource *source, AudioOutput *output)
 {
-  buff = (int16_t*)malloc(OPUS_BUFF * sizeof(int16_t));
+  buff = (int16_t*)__malloc(OPUS_BUFF * sizeof(int16_t));
   if (!buff) return false;
 
   if (!source) return false;

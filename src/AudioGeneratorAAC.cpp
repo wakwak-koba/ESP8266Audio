@@ -21,6 +21,7 @@
 #pragma GCC optimize ("O3")
 
 #include "AudioGeneratorAAC.h"
+#include "allocate-memory.h"
 
 AudioGeneratorAAC::AudioGeneratorAAC()
 {
@@ -31,8 +32,8 @@ AudioGeneratorAAC::AudioGeneratorAAC()
   file = NULL;
   output = NULL;
 
-  buff = (uint8_t*)malloc(buffLen);
-  outSample = (int16_t*)malloc(1024 * 2 * sizeof(uint16_t));
+  buff = (uint8_t*)__malloc(buffLen);
+  outSample = (int16_t*)__malloc(1024 * 2 * sizeof(uint16_t));
   if (!buff || !outSample) {
     audioLogger->printf_P(PSTR("ERROR: Out of memory in AAC\n"));
     Serial.flush();

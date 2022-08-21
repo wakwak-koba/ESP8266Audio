@@ -16,16 +16,13 @@
 #ifndef _OS_TYPES_H
 #define _OS_TYPES_H
 
+#include "../../allocate-memory.h"
+
 /* make it easy on the folks that want to compile the libs with a
    different malloc than stdlib */
-#if defined(ESP32)
-  #include <esp_heap_caps.h>
-  #define _ogg_malloc(s)  heap_caps_malloc(s, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT)
-#else
-  #define _ogg_malloc  malloc
-#endif
-#define _ogg_calloc  calloc
-#define _ogg_realloc realloc
+#define _ogg_malloc  __malloc
+#define _ogg_calloc  __calloc
+#define _ogg_realloc __realloc
 #define _ogg_free    free
 
 #if defined(_WIN32)

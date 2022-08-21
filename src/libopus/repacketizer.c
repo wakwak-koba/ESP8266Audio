@@ -32,6 +32,7 @@
 #include "opus.h"
 #include "opus_private.h"
 #include "celt/os_support.h"
+#include "../allocate-memory.h"
 
 
 int opus_repacketizer_get_size(void)
@@ -239,7 +240,7 @@ opus_int32 opus_repacketizer_out(OpusRepacketizer *rp, unsigned char *data, opus
 
 int opus_packet_pad(unsigned char *data, opus_int32 len, opus_int32 new_len)
 {
-   OpusRepacketizer *rp = (OpusRepacketizer*)malloc(sizeof(OpusRepacketizer));
+   OpusRepacketizer *rp = (OpusRepacketizer*)__malloc(sizeof(OpusRepacketizer));
    opus_int32 ret;
    if (len < 1) {
 	   free(rp);
@@ -271,7 +272,7 @@ int opus_packet_pad(unsigned char *data, opus_int32 len, opus_int32 new_len)
 
 opus_int32 opus_packet_unpad(unsigned char *data, opus_int32 len)
 {
-   OpusRepacketizer *rp = (OpusRepacketizer*)malloc(sizeof(OpusRepacketizer));
+   OpusRepacketizer *rp = (OpusRepacketizer*)__malloc(sizeof(OpusRepacketizer));
    opus_int32 ret;
    if (len < 1) {
 	   free(rp);
@@ -326,7 +327,7 @@ opus_int32 opus_multistream_packet_unpad(unsigned char *data, opus_int32 len, in
    unsigned char toc;
    opus_int16 size[48];
    opus_int32 packet_offset;
-   OpusRepacketizer *rp = (OpusRepacketizer*)malloc(sizeof(OpusRepacketizer));
+   OpusRepacketizer *rp = (OpusRepacketizer*)__malloc(sizeof(OpusRepacketizer));
    unsigned char *dst;
    opus_int32 dst_len;
 

@@ -45,6 +45,8 @@
 #ifndef TSF_INCLUDE_TSF_INL
 #define TSF_INCLUDE_TSF_INL
 
+#include "../allocate-memory.h"
+
 #ifdef __cplusplus
 extern "C" {
 #  define CPP_DEFAULT0 = 0
@@ -238,9 +240,9 @@ TSFDEF float tsf_channel_get_tuning(tsf* f, int channel);
 #define TSF_FASTRELEASETIME 0.01f
 #if !defined(TSF_MALLOC) || !defined(TSF_FREE) || !defined(TSF_REALLOC)
 #  include <stdlib.h>
-#  define TSF_MALLOC  malloc
+#  define TSF_MALLOC  __malloc
 #  define TSF_FREE    free
-#  define TSF_REALLOC realloc
+#  define TSF_REALLOC __realloc
 #endif
 
 #if !defined(TSF_MEMCPY) || !defined(TSF_MEMSET)

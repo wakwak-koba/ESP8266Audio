@@ -34,6 +34,7 @@
 #if defined(ESP8266)
 
 #include "SinglePinI2SDriver.h"
+#include "../allocate-memory.h"
 
 SinglePinI2SDriver::~SinglePinI2SDriver()
 {
@@ -80,7 +81,7 @@ bool SinglePinI2SDriver::allocateBuffers()
 {
   // Allocate output (RXLINK) descriptors and bufferss
   if (descriptors) return true;
-  descriptors = (SLCDecriptor*) calloc(bufCount, sizeof(SLCDecriptor));
+  descriptors = (SLCDecriptor*) __calloc(bufCount, sizeof(SLCDecriptor));
   if (!descriptors) return false;
   int allocated;
   for (allocated = 0; allocated < bufCount; allocated++) {

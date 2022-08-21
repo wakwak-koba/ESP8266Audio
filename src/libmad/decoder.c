@@ -51,6 +51,7 @@
 # include "frame.h"
 # include "synth.h"
 # include "decoder.h"
+# include "../allocate-memory.h"
 
 /*
    NAME:	decoder->init()
@@ -237,7 +238,7 @@ enum mad_flow receive(int fd, void **message, unsigned int *size)
 
     if (*size > 0) {
       if (*message == 0) {
-        *message = malloc(*size);
+        *message = __malloc(*size);
         if (*message == 0)
           return MAD_FLOW_BREAK;
       }
@@ -550,7 +551,7 @@ int mad_decoder_run(struct mad_decoder *decoder, enum mad_decoder_mode mode)
   if (run == 0)
     return -1;
 
-  decoder->sync = malloc(sizeof(*decoder->sync));
+  decoder->sync = __malloc(sizeof(*decoder->sync));
   if (decoder->sync == 0)
     return -1;
 

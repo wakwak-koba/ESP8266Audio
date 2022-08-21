@@ -41,12 +41,13 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "../../allocate-memory.h"
 
 /** Opus wrapper for malloc(). To do your own dynamic allocation, all you need to do is replace this function and opus_free */
 #ifndef OVERRIDE_OPUS_ALLOC
 static OPUS_INLINE void *opus_alloc (size_t size)
 {
-   return malloc(size);
+   return __malloc(size);
 }
 #endif
 

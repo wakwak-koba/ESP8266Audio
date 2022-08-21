@@ -20,6 +20,7 @@
 
 #include <Arduino.h>
 #include "AudioOutputMixer.h"
+#include "allocate-memory.h"
 
 AudioOutputMixerStub::AudioOutputMixerStub(AudioOutputMixer *sink, int id) : AudioOutput()
 {
@@ -71,8 +72,8 @@ bool AudioOutputMixerStub::stop()
 AudioOutputMixer::AudioOutputMixer(int buffSizeSamples, AudioOutput *dest) : AudioOutput()
 {
   buffSize = buffSizeSamples;
-  leftAccum = (int32_t*)calloc(sizeof(int32_t), buffSize);
-  rightAccum = (int32_t*)calloc(sizeof(int32_t), buffSize);
+  leftAccum = (int32_t*)__calloc(sizeof(int32_t), buffSize);
+  rightAccum = (int32_t*)__calloc(sizeof(int32_t), buffSize);
   for (int i=0; i<maxStubs; i++) {
     stubAllocated[i] = false;
     stubRunning[i] = false;

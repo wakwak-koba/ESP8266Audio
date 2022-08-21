@@ -41,6 +41,7 @@
 #include "private/memory.h"
 #include "FLAC/assert.h"
 #include "share/alloc.h"
+#include "../allocate-memory.h"
 
 #pragma GCC optimize ("O3")
 
@@ -213,8 +214,8 @@ FLAC__bool FLAC__memory_alloc_aligned_real_array(size_t elements, FLAC__real **u
 void *safe_malloc_mul_2op_p(size_t size1, size_t size2)
 {
 	if(!size1 || !size2)
-		return malloc(1); /* malloc(0) is undefined; FLAC src convention is to always allocate */
+		return __malloc(1); /* malloc(0) is undefined; FLAC src convention is to always allocate */
 	if(size1 > SIZE_MAX / size2)
 		return 0;
-	return malloc(size1*size2);
+	return __malloc(size1*size2);
 }

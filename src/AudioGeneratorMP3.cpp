@@ -20,6 +20,7 @@
 
 
 #include "AudioGeneratorMP3.h"
+#include "allocate-memory.h"
 
 AudioGeneratorMP3::AudioGeneratorMP3()
 {
@@ -319,10 +320,10 @@ bool AudioGeneratorMP3::begin(AudioFileSource *source, AudioOutput *output)
       return false;
     }
   } else {
-    buff = reinterpret_cast<unsigned char *>(malloc(buffLen));
-    stream = reinterpret_cast<struct mad_stream *>(malloc(sizeof(struct mad_stream)));
-    frame = reinterpret_cast<struct mad_frame *>(malloc(sizeof(struct mad_frame)));
-    synth = reinterpret_cast<struct mad_synth *>(malloc(sizeof(struct mad_synth)));
+    buff = reinterpret_cast<unsigned char *>(__malloc(buffLen));
+    stream = reinterpret_cast<struct mad_stream *>(__malloc(sizeof(struct mad_stream)));
+    frame = reinterpret_cast<struct mad_frame *>(__malloc(sizeof(struct mad_frame)));
+    synth = reinterpret_cast<struct mad_synth *>(__malloc(sizeof(struct mad_synth)));
     if (!buff || !stream || !frame || !synth) {
       free(buff);
       free(stream);

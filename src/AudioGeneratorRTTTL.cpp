@@ -23,6 +23,7 @@
 
 
 #include "AudioGeneratorRTTTL.h"
+#include "allocate-memory.h"
 
 AudioGeneratorRTTTL::AudioGeneratorRTTTL()
 {
@@ -274,7 +275,7 @@ bool AudioGeneratorRTTTL::begin(AudioFileSource *source, AudioOutput *output)
   if (!file->isOpen()) return false; // Error
   
   len = file->getSize();
-  buff = (char *)malloc(len);
+  buff = (char *)__malloc(len);
   if (!buff) return false;
   if (file->read(buff, len) != (uint32_t)len) return false;
 

@@ -33,6 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "../define.h"
 #include "../tuning_parameters.h"
 #include "../../celt/pitch.h"
+#include "../../../allocate-memory.h"
 
 #define MAX_FRAME_SIZE              384             /* subfr_length * nb_subfr = ( 0.005 * 16000 + 16 ) * 4 = 384 */
 
@@ -57,12 +58,12 @@ void silk_burg_modified_c(
     opus_int         k, n, s, lz, rshifts, reached_max_gain;
     opus_int32       C0, num, nrg, rc_Q31, invGain_Q30, Atmp_QA, Atmp1, tmp1, tmp2, x1, x2;
     const opus_int16 *x_ptr;
-    opus_int32       *C_first_row = (opus_int32*)malloc(sizeof(opus_int32) * SILK_MAX_ORDER_LPC);
-    opus_int32       *C_last_row = (opus_int32*)malloc(sizeof(opus_int32) * SILK_MAX_ORDER_LPC);
-    opus_int32       *Af_QA = (opus_int32*)malloc(sizeof(opus_int32) * SILK_MAX_ORDER_LPC);
-    opus_int32       *CAf = (opus_int32*)malloc(sizeof(opus_int32) * (SILK_MAX_ORDER_LPC+1));
-    opus_int32       *CAb = (opus_int32*)malloc(sizeof(opus_int32) * (SILK_MAX_ORDER_LPC+1));
-    opus_int32       *xcorr = (opus_int32*)malloc(sizeof(opus_int32) * SILK_MAX_ORDER_LPC);
+    opus_int32       *C_first_row = (opus_int32*)__malloc(sizeof(opus_int32) * SILK_MAX_ORDER_LPC);
+    opus_int32       *C_last_row = (opus_int32*)__malloc(sizeof(opus_int32) * SILK_MAX_ORDER_LPC);
+    opus_int32       *Af_QA = (opus_int32*)__malloc(sizeof(opus_int32) * SILK_MAX_ORDER_LPC);
+    opus_int32       *CAf = (opus_int32*)__malloc(sizeof(opus_int32) * (SILK_MAX_ORDER_LPC+1));
+    opus_int32       *CAb = (opus_int32*)__malloc(sizeof(opus_int32) * (SILK_MAX_ORDER_LPC+1));
+    opus_int32       *xcorr = (opus_int32*)__malloc(sizeof(opus_int32) * SILK_MAX_ORDER_LPC);
     opus_int64       C0_64;
 
     celt_assert( subfr_length * nb_subfr <= MAX_FRAME_SIZE );

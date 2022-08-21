@@ -2785,7 +2785,7 @@ static int op_init_buffer(OggOpusFile *_of){
   else nchannels_max=OP_NCHANNELS_MAX;
   _of->od_buffer=(op_sample *)_ogg_malloc(
    sizeof(*_of->od_buffer)*nchannels_max*120*48);
-  if(_of->od_buffer==NULL)return -(sizeof(*_of->od_buffer)*nchannels_max*120*48);
+  if(_of->od_buffer==NULL)return OP_EFAULT;
   return 0;
 }
 

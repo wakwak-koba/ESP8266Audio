@@ -50,6 +50,7 @@
 #include <stdarg.h>
 #include "celt_lpc.h"
 #include "vq.h"
+#include "../../allocate-memory.h"
 
 /* The maximum pitch lag to allow in the pitch-based PLC. It's possible to save
    CPU time in the PLC pitch search by making this smaller than MAX_PERIOD. The
@@ -482,7 +483,7 @@ static int celt_plc_pitch_search(celt_sig *decode_mem[2], int C, int arch)
    int pitch_index;
    VARDECL( opus_val16, lp_pitch_buf );
    SAVE_STACK;
-   opus_val16 *lp_pitch_buf = (opus_val16*)malloc((DECODE_BUFFER_SIZE>>1) * sizeof(opus_val16)); //ALLOC( lp_pitch_buf, DECODE_BUFFER_SIZE>>1, opus_val16 );
+   opus_val16 *lp_pitch_buf = (opus_val16*)__malloc((DECODE_BUFFER_SIZE>>1) * sizeof(opus_val16)); //ALLOC( lp_pitch_buf, DECODE_BUFFER_SIZE>>1, opus_val16 );
    pitch_downsample(decode_mem, lp_pitch_buf,
          DECODE_BUFFER_SIZE, C, arch);
    pitch_search(lp_pitch_buf+(PLC_PITCH_LAG_MAX>>1), lp_pitch_buf,

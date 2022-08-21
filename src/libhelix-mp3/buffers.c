@@ -49,6 +49,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "coder.h"
+#include "../allocate-memory.h"
 
 /**************************************************************************************
  * Function:    ClearBuffer
@@ -107,18 +108,18 @@ MP3DecInfo *AllocateBuffers(void)
 	IMDCTInfo *mi;
 	SubbandInfo *sbi;
 
-	mp3DecInfo = (MP3DecInfo *)malloc(sizeof(MP3DecInfo));
+	mp3DecInfo = (MP3DecInfo *)__malloc(sizeof(MP3DecInfo));
 	if (!mp3DecInfo)
 		return 0;
 	ClearBuffer(mp3DecInfo, sizeof(MP3DecInfo));
 	
-	fh =  (FrameHeader *)     malloc(sizeof(FrameHeader));
-	si =  (SideInfo *)        malloc(sizeof(SideInfo));
-	sfi = (ScaleFactorInfo *) malloc(sizeof(ScaleFactorInfo));
-	hi =  (HuffmanInfo *)     malloc(sizeof(HuffmanInfo));
-	di =  (DequantInfo *)     malloc(sizeof(DequantInfo));
-	mi =  (IMDCTInfo *)       malloc(sizeof(IMDCTInfo));
-	sbi = (SubbandInfo *)     malloc(sizeof(SubbandInfo));
+	fh =  (FrameHeader *)     __malloc(sizeof(FrameHeader));
+	si =  (SideInfo *)        __malloc(sizeof(SideInfo));
+	sfi = (ScaleFactorInfo *) __malloc(sizeof(ScaleFactorInfo));
+	hi =  (HuffmanInfo *)     __malloc(sizeof(HuffmanInfo));
+	di =  (DequantInfo *)     __malloc(sizeof(DequantInfo));
+	mi =  (IMDCTInfo *)       __malloc(sizeof(IMDCTInfo));
+	sbi = (SubbandInfo *)     __malloc(sizeof(SubbandInfo));
 
 	mp3DecInfo->FrameHeaderPS =     (void *)fh;
 	mp3DecInfo->SideInfoPS =        (void *)si;

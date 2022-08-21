@@ -50,6 +50,7 @@
 #endif
 
 #include "coder.h"
+#include "../allocate-memory.h"
 
 /**************************************************************************************
  * Function:    ClearBuffer
@@ -98,12 +99,12 @@ AACDecInfo *AllocateBuffers(void)
 {
 	AACDecInfo *aacDecInfo;
 
-	aacDecInfo = (AACDecInfo *)malloc(sizeof(AACDecInfo));
+	aacDecInfo = (AACDecInfo *)__malloc(sizeof(AACDecInfo));
 	if (!aacDecInfo)
 		return 0;
 	ClearBuffer(aacDecInfo, sizeof(AACDecInfo));
 
-	aacDecInfo->psInfoBase = malloc(sizeof(PSInfoBase));
+	aacDecInfo->psInfoBase = __malloc(sizeof(PSInfoBase));
 	if (!aacDecInfo->psInfoBase) {
 		FreeBuffers(aacDecInfo);
 		return 0;

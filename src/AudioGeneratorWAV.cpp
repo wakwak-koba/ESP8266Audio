@@ -20,6 +20,7 @@
 
 
 #include "AudioGeneratorWAV.h"
+#include "allocate-memory.h"
 
 AudioGeneratorWAV::AudioGeneratorWAV()
 {
@@ -260,7 +261,7 @@ bool AudioGeneratorWAV::ReadWAVInfo()
   availBytes = u32;
 
   // Now set up the buffer or fail
-  buff = reinterpret_cast<uint8_t *>(malloc(buffSize));
+  buff = reinterpret_cast<uint8_t *>(__malloc(buffSize));
   if (!buff) {
     Serial.printf_P(PSTR("AudioGeneratorWAV::ReadWAVInfo: cannot read WAV, failed to set up buffer \n"));
     return false;

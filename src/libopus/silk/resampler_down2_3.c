@@ -32,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "SigProc_FIX.h"
 #include "resampler_private.h"
 #include "../celt/stack_alloc.h"
+#include "../../allocate-memory.h"
 
 #define ORDER_FIR                   4
 
@@ -49,7 +50,7 @@ void silk_resampler_down2_3(
     SAVE_STACK;
 
 //    ALLOC( buf, RESAMPLER_MAX_BATCH_SIZE_IN + ORDER_FIR, opus_int32 );
-    opus_int32 *buf = (opus_int32*)malloc((RESAMPLER_MAX_BATCH_SIZE_IN + ORDER_FIR) * sizeof(opus_int32));
+    opus_int32 *buf = (opus_int32*)__malloc((RESAMPLER_MAX_BATCH_SIZE_IN + ORDER_FIR) * sizeof(opus_int32));
 
     /* Copy buffered samples to start of buffer */
     silk_memcpy( buf, S, ORDER_FIR * sizeof( opus_int32 ) );
