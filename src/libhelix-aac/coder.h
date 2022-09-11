@@ -304,8 +304,8 @@ typedef struct _PSInfoBase {
 
     int                   gbCurrent[MAX_NCHANS_ELEM];
     int                   coef[MAX_NCHANS_ELEM][AAC_MAX_NSAMPS];
-    int                   (*sbrWorkBuf)[AAC_MAX_NSAMPS];	// [MAX_NCHANS_ELEM][AAC_MAX_NSAMPS];
 //  int                   sbrWorkBuf[MAX_NCHANS_ELEM][AAC_MAX_NSAMPS];
+    int                   (*sbrWorkBuf)[AAC_MAX_NSAMPS];
     /* state information which must be saved for each element and used in next frame */
     int                   overlap[AAC_MAX_NCHANS][AAC_MAX_NSAMPS];
     int                   prevWinShape[AAC_MAX_NCHANS];

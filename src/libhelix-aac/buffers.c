@@ -145,7 +145,7 @@ AACDecInfo *AllocateBuffersPreSBR(void **ptr, int *sz, bool enableSBR)
         ClearBuffer(aacDecInfo->psInfoBase, sizeof(PSInfoBase));
 
         if (enableSBR) {
-            ((PSInfoBase*)(aacDecInfo->psInfoBase))->sbrWorkBuf = (int*)p;
+            ((PSInfoBase*)(aacDecInfo->psInfoBase))->sbrWorkBuf = (int (*)[AAC_MAX_NSAMPS])p;
             p += (sizeof(int) * MAX_NCHANS_ELEM * AAC_MAX_NSAMPS + 7) & ~7;
             *sz -= (sizeof(int) * MAX_NCHANS_ELEM * AAC_MAX_NSAMPS + 7) & ~7;
             if (*sz <0) {
