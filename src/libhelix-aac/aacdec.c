@@ -57,46 +57,52 @@
  *              clear all the user-accessible fields
  *              initialize SBR decoder if enabled
  *
- * Inputs:      none
+ * Inputs:      SBR function
  *
  * Outputs:     none
  *
  * Return:      handle to AAC decoder instance, 0 if malloc fails
  **************************************************************************************/
-HAACDecoder AACInitDecoder(void)
+HAACDecoder AACInitDecoderSBR(bool enableSBR)
 {
 	AACDecInfo *aacDecInfo;
 
-	aacDecInfo = AllocateBuffers();
+	aacDecInfo = AllocateBuffersSBR(enableSBR);
 	if (!aacDecInfo)
 		return 0;
 
-#ifdef AAC_ENABLE_SBR
-	if (InitSBR(aacDecInfo)) {
+	if (enableSBR && InitSBR(aacDecInfo)) {
 		AACFreeDecoder(aacDecInfo);
 		return 0;
 	}
-#endif
 
 	return (HAACDecoder)aacDecInfo;
 }
 
-HAACDecoder AACInitDecoderPre(void *ptr, int sz)
+HAACDecoder AACInitDecoderPreSBR(void *ptr, int sz, bool enableSBR)
 {
         AACDecInfo *aacDecInfo;
 
-        aacDecInfo = AllocateBuffersPre(&ptr, &sz);
-        if (!aacDecInfo)
-                return 0;
-
-#ifdef AAC_ENABLE_SBR
-        if (InitSBRPre(aacDecInfo, &ptr, &sz)) {
+        aacDecInfo = AllocateBuffersPreSBR(&ptr, &sz, enableSBR);
+        if (!aacDecInfo) {
                 return 0;
         }
-#endif
+
+        if (enableSBR && InitSBRPre(aacDecInfo, &ptr, &sz)) {
+                return 0;
+        }
 
         return (HAACDecoder)aacDecInfo;
 }
+
+HAACDecoder AACInitDecoder(void) {
+	return AACInitDecoderSBR(false);
+}
+
+HAACDecoder AACInitDecoderPre(void *ptr, int sz) {
+	return AACInitDecoderPreSBR(ptr, sz, false);
+}
+
 
 /**************************************************************************************
  * Function:    AACFreeDecoder
@@ -117,9 +123,9 @@ void AACFreeDecoder(HAACDecoder hAACDecoder)
 	if (!aacDecInfo)
 		return;
 
-#ifdef AAC_ENABLE_SBR
-	FreeSBR(aacDecInfo);
-#endif
+	if (aacDecInfo->enableSBR)
+		FreeSBR(aacDecInfo);
+
 	FreeBuffers(aacDecInfo);
 }
 
@@ -259,9 +265,8 @@ int AACFlushCodec(HAACDecoder hAACDecoder)
 
 	/* reset internal codec state (flush overlap buffers, etc.) */
 	FlushCodec(aacDecInfo);
-#ifdef AAC_ENABLE_SBR
-	FlushCodecSBR(aacDecInfo);
-#endif
+	if (aacDecInfo->enableSBR)
+		FlushCodecSBR(aacDecInfo);
 
 	return ERR_AAC_NONE;
 }
@@ -294,9 +299,7 @@ int AACDecode(HAACDecoder hAACDecoder, unsigned char **inbuf, int *bytesLeft, sh
 	int ch, baseChan, elementChans;
 	unsigned char *inptr;
 	AACDecInfo *aacDecInfo = (AACDecInfo *)hAACDecoder;
-#ifdef AAC_ENABLE_SBR
 	int baseChanSBR, elementChansSBR;
-#endif
 
 	if (!aacDecInfo)
 		return ERR_AAC_NULL_POINTER;
@@ -365,9 +368,7 @@ int AACDecode(HAACDecoder hAACDecoder, unsigned char **inbuf, int *bytesLeft, sh
 
 	bitOffset = 0;
 	baseChan = 0;
-#ifdef AAC_ENABLE_SBR	
 	baseChanSBR = 0;
-#endif	
 	do {
 	
 
@@ -430,7 +431,6 @@ int AACDecode(HAACDecoder hAACDecoder, unsigned char **inbuf, int *bytesLeft, sh
       PROFILE_END();
 		}
 
-#ifdef AAC_ENABLE_SBR
 		if (aacDecInfo->sbrEnabled && (aacDecInfo->currBlockID == AAC_ID_FIL || aacDecInfo->currBlockID == AAC_ID_LFE)) {
 			if (aacDecInfo->currBlockID == AAC_ID_LFE)
 				elementChansSBR = elementNumChans[AAC_ID_LFE];
@@ -452,7 +452,6 @@ int AACDecode(HAACDecoder hAACDecoder, unsigned char **inbuf, int *bytesLeft, sh
 
 			baseChanSBR += elementChansSBR;
 		}
-#endif
 		
 		baseChan += elementChans;
 	} while (aacDecInfo->currBlockID != AAC_ID_END);

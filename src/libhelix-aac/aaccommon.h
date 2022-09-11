@@ -49,11 +49,6 @@
 #include <Arduino.h>
 #include <pgmspace.h>
 
-// Can't fit in ESP8266 RAM
-#if defined(ESP8266) && defined(AAC_ENABLE_SBR)
-  #undef AAC_ENABLE_SBR
-#endif
-
 #pragma GCC optimize ("O3")
 
 #include "aacdec.h"
@@ -153,11 +148,14 @@ typedef struct _AACDecInfo {
 	int pnsUsed;
 	int frameCount;
 
+	bool enableSBR;
 } AACDecInfo;
 
 /* decoder functions which must be implemented for each platform */
 AACDecInfo *AllocateBuffers(void);
 AACDecInfo *AllocateBuffersPre(void **space, int *len);
+AACDecInfo *AllocateBuffersSBR(bool enableSBR);
+AACDecInfo *AllocateBuffersPreSBR(void **space, int *len, bool enableSBR);
 void FreeBuffers(AACDecInfo *aacDecInfo);
 void ClearBuffer(void *buf, int nBytes);
 

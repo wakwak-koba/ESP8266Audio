@@ -48,7 +48,6 @@
 
 #define RND_VAL		(1 << (FBITS_OUT_IMDCT-1))
 
-#ifndef AAC_ENABLE_SBR
 
 /**************************************************************************************
  * Function:    DecWindowOverlap
@@ -495,7 +494,6 @@
 	} while (i);
 }
 
-#endif	/* !AAC_ENABLE_SBR */
 
 /**************************************************************************************
  * Function:    IMDCT
@@ -544,44 +542,44 @@ int IMDCT(AACDecInfo *aacDecInfo, int ch, int chOut, short *outbuf)
 		DCT4(1, psi->coef[ch], psi->gbCurrent[ch]);
 	}
 
-#ifdef AAC_ENABLE_SBR
-	/* window, overlap-add, don't clip to short (send to SBR decoder) 
-	 * store the decoded 32-bit samples in top half (second AAC_MAX_NSAMPS samples) of coef buffer
-	 */
-	if (icsInfo->winSequence == 0)
-		DecWindowOverlapNoClip(psi->coef[ch], psi->overlap[chOut], psi->sbrWorkBuf[ch], icsInfo->winShape, psi->prevWinShape[chOut]);
-	else if (icsInfo->winSequence == 1)
-		DecWindowOverlapLongStartNoClip(psi->coef[ch], psi->overlap[chOut], psi->sbrWorkBuf[ch], icsInfo->winShape, psi->prevWinShape[chOut]);
-	else if (icsInfo->winSequence == 2)
-		DecWindowOverlapShortNoClip(psi->coef[ch], psi->overlap[chOut], psi->sbrWorkBuf[ch], icsInfo->winShape, psi->prevWinShape[chOut]);
-	else if (icsInfo->winSequence == 3)
-		DecWindowOverlapLongStopNoClip(psi->coef[ch], psi->overlap[chOut], psi->sbrWorkBuf[ch], icsInfo->winShape, psi->prevWinShape[chOut]);
+	if (aacDecInfo->enableSBR) {
+		/* window, overlap-add, don't clip to short (send to SBR decoder) 
+		 * store the decoded 32-bit samples in top half (second AAC_MAX_NSAMPS samples) of coef buffer
+		 */
+		if (icsInfo->winSequence == 0)
+			DecWindowOverlapNoClip(psi->coef[ch], psi->overlap[chOut], psi->sbrWorkBuf[ch], icsInfo->winShape, psi->prevWinShape[chOut]);
+		else if (icsInfo->winSequence == 1)
+			DecWindowOverlapLongStartNoClip(psi->coef[ch], psi->overlap[chOut], psi->sbrWorkBuf[ch], icsInfo->winShape, psi->prevWinShape[chOut]);
+		else if (icsInfo->winSequence == 2)
+			DecWindowOverlapShortNoClip(psi->coef[ch], psi->overlap[chOut], psi->sbrWorkBuf[ch], icsInfo->winShape, psi->prevWinShape[chOut]);
+		else if (icsInfo->winSequence == 3)
+			DecWindowOverlapLongStopNoClip(psi->coef[ch], psi->overlap[chOut], psi->sbrWorkBuf[ch], icsInfo->winShape, psi->prevWinShape[chOut]);
 
-	if (!aacDecInfo->sbrEnabled) {
-		for (i = 0; i < AAC_MAX_NSAMPS; i++) {
-			*outbuf = CLIPTOSHORT((psi->sbrWorkBuf[ch][i] + RND_VAL) >> FBITS_OUT_IMDCT);
-			outbuf += aacDecInfo->nChans;
+		if (!aacDecInfo->sbrEnabled) {
+			for (i = 0; i < AAC_MAX_NSAMPS; i++) {
+				*outbuf = CLIPTOSHORT((psi->sbrWorkBuf[ch][i] + RND_VAL) >> FBITS_OUT_IMDCT);
+				outbuf += aacDecInfo->nChans;
+			}
 		}
+
+		aacDecInfo->rawSampleBuf[ch] = psi->sbrWorkBuf[ch];
+		aacDecInfo->rawSampleBytes = sizeof(int);
+		aacDecInfo->rawSampleFBits = FBITS_OUT_IMDCT;
+	} else {
+		/* window, overlap-add, round to PCM - optimized for each window sequence */
+		if (icsInfo->winSequence == 0)
+			DecWindowOverlap(psi->coef[ch], psi->overlap[chOut], outbuf, aacDecInfo->nChans, icsInfo->winShape, psi->prevWinShape[chOut]);
+		else if (icsInfo->winSequence == 1)
+			DecWindowOverlapLongStart(psi->coef[ch], psi->overlap[chOut], outbuf, aacDecInfo->nChans, icsInfo->winShape, psi->prevWinShape[chOut]);
+		else if (icsInfo->winSequence == 2)
+			DecWindowOverlapShort(psi->coef[ch], psi->overlap[chOut], outbuf, aacDecInfo->nChans, icsInfo->winShape, psi->prevWinShape[chOut]);
+		else if (icsInfo->winSequence == 3)
+			DecWindowOverlapLongStop(psi->coef[ch], psi->overlap[chOut], outbuf, aacDecInfo->nChans, icsInfo->winShape, psi->prevWinShape[chOut]);
+
+		aacDecInfo->rawSampleBuf[ch] = 0;
+		aacDecInfo->rawSampleBytes = 0;
+		aacDecInfo->rawSampleFBits = 0;
 	}
-
-	aacDecInfo->rawSampleBuf[ch] = psi->sbrWorkBuf[ch];
-	aacDecInfo->rawSampleBytes = sizeof(int);
-	aacDecInfo->rawSampleFBits = FBITS_OUT_IMDCT;
-#else
-	/* window, overlap-add, round to PCM - optimized for each window sequence */
-	if (icsInfo->winSequence == 0)
-		DecWindowOverlap(psi->coef[ch], psi->overlap[chOut], outbuf, aacDecInfo->nChans, icsInfo->winShape, psi->prevWinShape[chOut]);
-	else if (icsInfo->winSequence == 1)
-		DecWindowOverlapLongStart(psi->coef[ch], psi->overlap[chOut], outbuf, aacDecInfo->nChans, icsInfo->winShape, psi->prevWinShape[chOut]);
-	else if (icsInfo->winSequence == 2)
-		DecWindowOverlapShort(psi->coef[ch], psi->overlap[chOut], outbuf, aacDecInfo->nChans, icsInfo->winShape, psi->prevWinShape[chOut]);
-	else if (icsInfo->winSequence == 3)
-		DecWindowOverlapLongStop(psi->coef[ch], psi->overlap[chOut], outbuf, aacDecInfo->nChans, icsInfo->winShape, psi->prevWinShape[chOut]);
-
-	aacDecInfo->rawSampleBuf[ch] = 0;
-	aacDecInfo->rawSampleBytes = 0;
-	aacDecInfo->rawSampleFBits = 0;
-#endif
 
 	psi->prevWinShape[chOut] = icsInfo->winShape;
 

@@ -322,18 +322,16 @@ static int DecodeFillElement(AACDecInfo *aacDecInfo, BitStreamInfo *bsi)
 	aacDecInfo->currInstTag = -1;	/* fill elements don't have instance tag */
 	aacDecInfo->fillExtType = 0;
 
-#ifdef AAC_ENABLE_SBR
 	/* check for SBR 
 	 * aacDecInfo->sbrEnabled is sticky (reset each raw_data_block), so for multichannel 
 	 *    need to verify that all SCE/CPE/ICCE have valid SBR fill element following, and 
 	 *    must upsample by 2 for LFE
 	 */
-	if (psi->fillCount > 0) {
+	if (aacDecInfo->enableSBR && psi->fillCount > 0) {
 		aacDecInfo->fillExtType = (int)((psi->fillBuf[0] >> 4) & 0x0f);
 		if (aacDecInfo->fillExtType == EXT_SBR_DATA || aacDecInfo->fillExtType == EXT_SBR_DATA_CRC)
 			aacDecInfo->sbrEnabled = 1;
 	}
-#endif
 
 	aacDecInfo->fillBuf = psi->fillBuf;
 	aacDecInfo->fillCount = psi->fillCount;

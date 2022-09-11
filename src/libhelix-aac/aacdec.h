@@ -99,10 +99,6 @@ extern "C" {
 #define AAC_PROFILE_LC		1
 #define AAC_PROFILE_SSR		2
 
-/* define these to enable decoder features */
-#if defined(HELIX_FEATURE_AUDIO_CODEC_AAC_SBR) && !defined(ESP8266)
-#define AAC_ENABLE_SBR
-#endif //  HELIX_FEATURE_AUDIO_CODEC_AAC_SBR.
 #define AAC_ENABLE_MPEG4
 
 enum {
@@ -153,6 +149,8 @@ typedef void *HAACDecoder;
 /* public C API */
 HAACDecoder AACInitDecoder(void);
 HAACDecoder AACInitDecoderPre(void *ptr, int sz);
+HAACDecoder AACInitDecoderSBR(bool enableSBR);
+HAACDecoder AACInitDecoderPreSBR(void *ptr, int sz, bool enableSBR);
 void AACFreeDecoder(HAACDecoder hAACDecoder);
 int AACDecode(HAACDecoder hAACDecoder, unsigned char **inbuf, int *bytesLeft, short *outbuf);
 

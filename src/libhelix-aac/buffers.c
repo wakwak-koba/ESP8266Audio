@@ -85,7 +85,7 @@
  *
  * Description: allocate all the memory needed for the AAC decoder
  *
- * Inputs:      none
+ * Inputs:      SBR function
  *
  * Outputs:     none
  *
@@ -95,7 +95,7 @@
  * Notes:       if one or more mallocs fail, function frees any buffers already
  *                allocated before returning
  **************************************************************************************/
-AACDecInfo *AllocateBuffers(void)
+AACDecInfo *AllocateBuffersSBR(bool enableSBR)
 {
 	AACDecInfo *aacDecInfo;
 
@@ -111,10 +111,20 @@ AACDecInfo *AllocateBuffers(void)
 	}
 	ClearBuffer(aacDecInfo->psInfoBase, sizeof(PSInfoBase));
 
+	if (enableSBR) {
+		((PSInfoBase*)(aacDecInfo->psInfoBase))->sbrWorkBuf = __malloc(sizeof(int) * MAX_NCHANS_ELEM * AAC_MAX_NSAMPS);
+		if (!((PSInfoBase*)(aacDecInfo->psInfoBase))->sbrWorkBuf) {
+			FreeBuffers(aacDecInfo);
+			enableSBR = false;
+		} else {
+			ClearBuffer(((PSInfoBase*)(aacDecInfo->psInfoBase))->sbrWorkBuf, sizeof(int) * MAX_NCHANS_ELEM * AAC_MAX_NSAMPS);
+		}
+	}
+	aacDecInfo->enableSBR = enableSBR;
 	return aacDecInfo;
 }
 
-AACDecInfo *AllocateBuffersPre(void **ptr, int *sz)
+AACDecInfo *AllocateBuffersPreSBR(void **ptr, int *sz, bool enableSBR)
 {
         AACDecInfo *aacDecInfo;
 
@@ -134,10 +144,30 @@ AACDecInfo *AllocateBuffersPre(void **ptr, int *sz)
         }
         ClearBuffer(aacDecInfo->psInfoBase, sizeof(PSInfoBase));
 
+        if (enableSBR) {
+            ((PSInfoBase*)(aacDecInfo->psInfoBase))->sbrWorkBuf = (int*)p;
+            p += (sizeof(int) * MAX_NCHANS_ELEM * AAC_MAX_NSAMPS + 7) & ~7;
+            *sz -= (sizeof(int) * MAX_NCHANS_ELEM * AAC_MAX_NSAMPS + 7) & ~7;
+            if (*sz <0) {
+                enableSBR = false;
+            } else {
+                ClearBuffer(((PSInfoBase*)(aacDecInfo->psInfoBase))->sbrWorkBuf, sizeof(int) * MAX_NCHANS_ELEM * AAC_MAX_NSAMPS);
+            }
+        }
+
 	*ptr = p;
 
+        aacDecInfo->enableSBR = enableSBR;
         return aacDecInfo;
 }
+
+AACDecInfo *AllocateBuffers(void) {
+    return AllocateBuffersSBR(false);
+}
+AACDecInfo *AllocateBuffersPre(void **ptr, int *sz) {
+    return AllocateBuffersPreSBR(ptr, sz, false);
+}
+
 
 #ifndef SAFE_FREE
 #define SAFE_FREE(x)	{if (x)	free(x);	(x) = 0;}	/* helper macro */
@@ -161,6 +191,7 @@ void FreeBuffers(AACDecInfo *aacDecInfo)
 	if (!aacDecInfo)
 		return;
 
+	SAFE_FREE(((PSInfoBase*)(aacDecInfo->psInfoBase))->sbrWorkBuf);
 	SAFE_FREE(aacDecInfo->psInfoBase);
 	SAFE_FREE(aacDecInfo);
 }

@@ -27,8 +27,8 @@
 class AudioGeneratorAAC : public AudioGenerator
 {
   public:
-    AudioGeneratorAAC();
-    AudioGeneratorAAC(void *preallocateData, int preallocateSize);
+    AudioGeneratorAAC(bool enableSBR = false);
+    AudioGeneratorAAC(void *preallocateData, int preallocateSize, bool enableSBR = false);
     virtual ~AudioGeneratorAAC() override;
     virtual bool begin(AudioFileSource *source, AudioOutput *output) override;
     virtual bool loop() override;

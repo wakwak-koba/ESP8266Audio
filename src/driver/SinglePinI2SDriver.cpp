@@ -85,7 +85,7 @@ bool SinglePinI2SDriver::allocateBuffers()
   if (!descriptors) return false;
   int allocated;
   for (allocated = 0; allocated < bufCount; allocated++) {
-    uint32_t* buffer = (uint32_t*)malloc(bufSize * sizeof(uint32_t));
+    uint32_t* buffer = (uint32_t*)__malloc(bufSize * sizeof(uint32_t));
     if (!buffer) break;
     auto descriptor = &descriptors[allocated];
     descriptor->eof = 1; // Needed for SLC to update SLCRXEDA

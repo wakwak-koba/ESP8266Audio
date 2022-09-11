@@ -23,7 +23,7 @@
 #include "AudioGeneratorAAC.h"
 #include "allocate-memory.h"
 
-AudioGeneratorAAC::AudioGeneratorAAC()
+AudioGeneratorAAC::AudioGeneratorAAC(bool enableSBR)
 {
   preallocateSpace = NULL;
   preallocateSize = 0;
@@ -33,13 +33,13 @@ AudioGeneratorAAC::AudioGeneratorAAC()
   output = NULL;
 
   buff = (uint8_t*)__malloc(buffLen);
-  outSample = (int16_t*)__malloc(1024 * 2 * sizeof(uint16_t));
+  outSample = (int16_t*)__malloc((enableSBR ? 2048 : 1024) * AAC_MAX_NCHANS * sizeof(uint16_t));
   if (!buff || !outSample) {
     audioLogger->printf_P(PSTR("ERROR: Out of memory in AAC\n"));
     Serial.flush();
   }
 
-  hAACDecoder = AACInitDecoder();
+  hAACDecoder = AACInitDecoderSBR(enableSBR);
   if (!hAACDecoder) {
     audioLogger->printf_P(PSTR("Out of memory error! hAACDecoder==NULL\n"));
     Serial.flush();
@@ -53,7 +53,7 @@ AudioGeneratorAAC::AudioGeneratorAAC()
   lastChannels = 0;
 }
 
-AudioGeneratorAAC::AudioGeneratorAAC(void *preallocateData, int preallocateSz)
+AudioGeneratorAAC::AudioGeneratorAAC(void *preallocateData, int preallocateSz, bool enableSBR)
 {
   preallocateSpace = preallocateData;
   preallocateSize = preallocateSz;
@@ -66,14 +66,14 @@ AudioGeneratorAAC::AudioGeneratorAAC(void *preallocateData, int preallocateSz)
   buff = (uint8_t*) p;
   p += (buffLen + 7) & ~7;
   outSample = (int16_t*) p;
-  p += (1024 * 2 * sizeof(int16_t) + 7) & ~7;
+  p += ((enableSBR ? 2048 : 1024) * AAC_MAX_NCHANS * sizeof(int16_t) + 7) & ~7;
   int used = p - (uint8_t*)preallocateSpace;
   int availSpace = preallocateSize - used;
   if (availSpace < 0 ) {
     audioLogger->printf_P(PSTR("ERROR: Out of memory in AAC\n"));
   }
 
-  hAACDecoder = AACInitDecoderPre(p, availSpace);
+  hAACDecoder = AACInitDecoderPreSBR(p, availSpace, enableSBR);
   if (!hAACDecoder) {
     audioLogger->printf_P(PSTR("Out of memory error! hAACDecoder==NULL\n"));
     Serial.flush();
