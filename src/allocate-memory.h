@@ -5,7 +5,14 @@
   #include <esp_heap_caps.h>
   #include <string.h>  
 
-  #define __malloc(s)  heap_caps_malloc(s, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT)
+//#define __malloc(s)  heap_caps_malloc(s, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT)
+  
+  static void * __malloc(size_t s) {
+    void * p = heap_caps_malloc(s, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    if(!p)
+      p = heap_caps_malloc(s, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    return p;
+  }
   
   static void * __calloc(size_t n, size_t size) {
     void * p = __malloc(n * size);

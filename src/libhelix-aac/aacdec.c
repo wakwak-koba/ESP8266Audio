@@ -71,7 +71,7 @@ HAACDecoder AACInitDecoderSBR(bool enableSBR)
 	if (!aacDecInfo)
 		return 0;
 
-	if (enableSBR && InitSBR(aacDecInfo)) {
+	if (aacDecInfo->enableSBR && InitSBR(aacDecInfo)) {
 		AACFreeDecoder(aacDecInfo);
 		return 0;
 	}
@@ -88,7 +88,7 @@ HAACDecoder AACInitDecoderPreSBR(void *ptr, int sz, bool enableSBR)
                 return 0;
         }
 
-        if (enableSBR && InitSBRPre(aacDecInfo, &ptr, &sz)) {
+        if (aacDecInfo->enableSBR && InitSBRPre(aacDecInfo, &ptr, &sz)) {
                 return 0;
         }
 

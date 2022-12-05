@@ -21,6 +21,7 @@
 #pragma GCC optimize ("O3")
 
 #include "AudioGeneratorAAC.h"
+#include "libhelix-aac\aaccommon.h"
 #include "allocate-memory.h"
 
 AudioGeneratorAAC::AudioGeneratorAAC(bool enableSBR)
@@ -42,6 +43,10 @@ AudioGeneratorAAC::AudioGeneratorAAC(bool enableSBR)
   hAACDecoder = AACInitDecoderSBR(enableSBR);
   if (!hAACDecoder) {
     audioLogger->printf_P(PSTR("Out of memory error! hAACDecoder==NULL\n"));
+    Serial.flush();
+  }
+  if (enableSBR && !((AACDecInfo*)hAACDecoder)->enableSBR) {
+    audioLogger->printf_P(PSTR("SBR is disabled"));
     Serial.flush();
   }
 
@@ -76,6 +81,10 @@ AudioGeneratorAAC::AudioGeneratorAAC(void *preallocateData, int preallocateSz, b
   hAACDecoder = AACInitDecoderPreSBR(p, availSpace, enableSBR);
   if (!hAACDecoder) {
     audioLogger->printf_P(PSTR("Out of memory error! hAACDecoder==NULL\n"));
+    Serial.flush();
+  }
+  if (enableSBR && !((AACDecInfo*)hAACDecoder)->enableSBR) {
+    audioLogger->printf_P(PSTR("SBR is disabled"));
     Serial.flush();
   }
   buffValid = 0;
