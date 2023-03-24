@@ -21,7 +21,7 @@
 #pragma GCC optimize ("O3")
 
 #include "AudioGeneratorAAC.h"
-#include "libhelix-aac\aaccommon.h"
+#include "libhelix-aac/aaccommon.h"
 #include "allocate-memory.h"
 
 AudioGeneratorAAC::AudioGeneratorAAC(bool enableSBR)
