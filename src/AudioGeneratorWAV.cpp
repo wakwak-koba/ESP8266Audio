@@ -128,7 +128,7 @@ bool AudioGeneratorWAV::ReadWAVInfo()
     return false;
   };
   if (u32 != 0x46464952) {
-    Serial.printf_P(PSTR("AudioGeneratorWAV::ReadWAVInfo: cannot read WAV, invalid RIFF header, got: %08X \n"), (uint32_t) u32);
+    Serial.printf_P(PSTR("AudioGeneratorWAV::ReadWAVInfo: cannot read WAV, invalid RIFF header\n"));
     return false;
   }
 
@@ -144,7 +144,7 @@ bool AudioGeneratorWAV::ReadWAVInfo()
     return false;
   };
   if (u32 != 0x45564157) {
-    Serial.printf_P(PSTR("AudioGeneratorWAV::ReadWAVInfo: cannot read WAV, invalid WAVE header, got: %08X \n"), (uint32_t) u32);
+    Serial.printf_P(PSTR("AudioGeneratorWAV::ReadWAVInfo: cannot read WAV, invalid WAVE header\n"));
     return false;
   }
 
