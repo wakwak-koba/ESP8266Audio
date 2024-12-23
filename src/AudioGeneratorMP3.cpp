@@ -28,6 +28,9 @@ AudioGeneratorMP3::AudioGeneratorMP3()
   file = NULL;
   output = NULL;
   buff = NULL;
+  synth = NULL;
+  frame = NULL;
+  stream = NULL;
   nsCountMax = 1152/32;
   madInitted = false;
 }
@@ -38,6 +41,9 @@ AudioGeneratorMP3::AudioGeneratorMP3(void *space, int size): preallocateSpace(sp
   file = NULL;
   output = NULL;
   buff = NULL;
+  synth = NULL;
+  frame = NULL;
+  stream = NULL;
   nsCountMax = 1152/32;
   madInitted = false;
 }
@@ -52,6 +58,9 @@ AudioGeneratorMP3::AudioGeneratorMP3(void *buff, int buffSize, void *stream, int
   file = NULL;
   output = NULL;
   buff = NULL;
+  synth = NULL;
+  frame = NULL;
+  stream = NULL;
   nsCountMax = 1152/32;
   madInitted = false;
 }
