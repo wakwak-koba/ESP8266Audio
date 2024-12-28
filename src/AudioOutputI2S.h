@@ -21,8 +21,11 @@
 #pragma once
 
 #include "AudioOutput.h"
-
-#if defined(ARDUINO_ARCH_RP2040)
+#ifdef ESP32
+  #if __has_include(<driver/i2s_std.h>)
+   #include <driver/i2s_std.h>
+  #endif
+#elif defined(ARDUINO_ARCH_RP2040)
 #include <Arduino.h>
 #include <I2S.h>
 #endif
@@ -74,6 +77,12 @@ class AudioOutputI2S : public AudioOutput
     uint8_t wclkPin;
     uint8_t doutPin;
     uint8_t mclkPin;
+
+#ifdef ESP32
+  #if __has_include(<driver/i2s_std.h>)
+    i2s_chan_handle_t tx_handle = nullptr;
+  #endif
+#endif
 
 #if defined(ARDUINO_ARCH_RP2040)
     I2S i2s;

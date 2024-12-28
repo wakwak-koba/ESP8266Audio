@@ -20,7 +20,10 @@
 
 #include <Arduino.h>
 #ifdef ESP32
+#if __has_include(<driver/i2s_std.h>)
+#else
   #include "driver/i2s.h"
+#endif  
 #elif defined(ARDUINO_ARCH_RP2040) || ARDUINO_ESP8266_MAJOR >= 3
   #include <I2S.h>
 #elif ARDUINO_ESP8266_MAJOR < 3
@@ -120,7 +123,10 @@ bool AudioOutputI2SNoDAC::ConsumeSample(int16_t sample[2])
   // Either send complete pulse stream or nothing
 #ifdef ESP32
   size_t i2s_bytes_written;
+#if __has_include(<driver/i2s_std.h>)
+#else
   i2s_write((i2s_port_t)portNo, (const char *)dsBuff, sizeof(uint32_t) * (oversample/32), &i2s_bytes_written, 0);
+#endif
   if (!i2s_bytes_written){
     return false;
   }

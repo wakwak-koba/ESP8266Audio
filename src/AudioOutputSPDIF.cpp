@@ -41,8 +41,11 @@
 
 #include <Arduino.h>
 #if defined(ESP32)
+#if __has_include(<driver/i2s_std.h>)
+#else
   #include "driver/i2s.h"
   #include "soc/rtc.h"
+#endif
 #elif defined(ESP8266)
   #include "driver/SinglePinI2SDriver.h"
 #endif
@@ -88,6 +91,8 @@ AudioOutputSPDIF::AudioOutputSPDIF(int dout_pin, int port, int dma_buf_count)
 {
   this->portNo = port;
 #if defined(ESP32)
+#if __has_include(<driver/i2s_std.h>)
+#else
   // Configure ESP32 I2S to roughly compatible to ESP8266 peripheral
   i2s_config_t i2s_config_spdif = {
     .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
@@ -119,6 +124,7 @@ AudioOutputSPDIF::AudioOutputSPDIF(int dout_pin, int port, int dma_buf_count)
   }
   i2s_zero_dma_buffer((i2s_port_t)portNo);
   SetPinout(I2S_PIN_NO_CHANGE, I2S_PIN_NO_CHANGE, dout_pin);
+#endif  
   rate_multiplier = 2; // 2x32bit words
 #elif defined(ESP8266)
   (void) dout_pin;
@@ -142,9 +148,12 @@ AudioOutputSPDIF::~AudioOutputSPDIF()
 {
 #if defined(ESP32)
   if (i2sOn) {
+#if __has_include(<driver/i2s_std.h>)
+#else
     i2s_stop((i2s_port_t)this->portNo);
     audioLogger->printf("UNINSTALL I2S\n");
     i2s_driver_uninstall((i2s_port_t)this->portNo); //stop & destroy i2s driver
+#endif
   }
 #elif defined(ESP8266)
   if (i2sOn) I2SDriver.stop();
@@ -155,6 +164,8 @@ AudioOutputSPDIF::~AudioOutputSPDIF()
 bool AudioOutputSPDIF::SetPinout(int bclk, int wclk, int dout)
 {
 #if defined(ESP32)
+#if __has_include(<driver/i2s_std.h>)
+#else
   i2s_pin_config_t pins = {
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 4, 0)
     .mck_io_num = 0, // unused
@@ -168,6 +179,7 @@ bool AudioOutputSPDIF::SetPinout(int bclk, int wclk, int dout)
     audioLogger->println("ERROR setting up S/PDIF I2S pins\n");
     return false;
   }
+#endif
   return true;
 #else
   (void) bclk;
@@ -185,6 +197,8 @@ bool AudioOutputSPDIF::SetRate(int hz)
   this->hertz = hz;
   int adjustedHz = AdjustI2SRate(hz);
 #if defined(ESP32)
+#if __has_include(<driver/i2s_std.h>)
+#else
   if (i2s_set_sample_rates((i2s_port_t)portNo, adjustedHz) == ESP_OK) {
 #if defined(ESP_ARDUINO_VERSION_MAJOR) && (ESP_ARDUINO_VERSION_MAJOR < 3)
     if (adjustedHz == 88200) {
@@ -197,6 +211,7 @@ bool AudioOutputSPDIF::SetRate(int hz)
   } else {
     audioLogger->println("ERROR changing S/PDIF sample rate");
   } 
+#endif
 #elif defined(ESP8266)
   I2SDriver.setRate(adjustedHz);
   audioLogger->printf_P(PSTR("S/PDIF rate set: %.3f\n"), I2SDriver.getActualRate()/4);
@@ -284,9 +299,13 @@ bool AudioOutputSPDIF::ConsumeSample(int16_t sample[2])
 #if defined(ESP32)
   // Assume DMA buffers are multiples of 16 bytes. Either we write all bytes or none.
   size_t bytes_written;
-  esp_err_t ret = i2s_write((i2s_port_t)portNo, (const char*)&buf, 8 * channels, &bytes_written, 0);
+#if __has_include(<driver/i2s_std.h>)
+  return false;
+#else
+  esp_err_t ret = 1_write((i2s_port_t)portNo, (const char*)&buf, 8 * channels, &bytes_written, 0);
   // If we didn't write all bytes, return false early and do not increment frame_num
   if ((ret != ESP_OK) || (bytes_written != (8 * channels))) return false;  
+#endif
 #elif defined(ESP8266)
   if (!I2SDriver.writeInterleaved(buf)) return false;
 #endif
@@ -298,7 +317,10 @@ bool AudioOutputSPDIF::ConsumeSample(int16_t sample[2])
 bool AudioOutputSPDIF::stop()
 {
 #if defined(ESP32)
+#if __has_include(<driver/i2s_std.h>)
+#else
   i2s_zero_dma_buffer((i2s_port_t)portNo);
+#endif  
 #elif defined(ESP8266)
   I2SDriver.stop();
 #endif
