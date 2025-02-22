@@ -112,7 +112,11 @@ AudioOutputSPDIF::AudioOutputSPDIF(int dout_pin, int port, int dma_buf_count)
   std_cfg.gpio_cfg.ws = I2S_GPIO_UNUSED;
   std_cfg.gpio_cfg.dout = (gpio_num_t)dout_pin;
   std_cfg.gpio_cfg.din = I2S_GPIO_UNUSED;
-  std_cfg.slot_cfg.msb_right = true;
+#if SOC_I2S_HW_VERSION_1
+  std_cfg.slot_cfg.msb_right = false;
+#else
+    std_cfg.slot_cfg.left_align = false;
+#endif
   if (i2s_channel_init_std_mode(tx_handle, &std_cfg) != ESP_OK) {
     i2s_del_channel(tx_handle);
     tx_handle = nullptr;
@@ -120,8 +124,6 @@ AudioOutputSPDIF::AudioOutputSPDIF(int dout_pin, int port, int dma_buf_count)
     return;
   }
   i2s_channel_enable(tx_handle);
-  SetPinout(dout_pin);
-  
 #else
   // Configure ESP32 I2S to roughly compatible to ESP8266 peripheral
   i2s_config_t i2s_config_spdif = {
@@ -153,7 +155,6 @@ AudioOutputSPDIF::AudioOutputSPDIF(int dout_pin, int port, int dma_buf_count)
     return;
   }
   i2s_zero_dma_buffer((i2s_port_t)portNo);
-  SetPinout(dout_pin);
 #endif  
   rate_multiplier = 2; // 2x32bit words
 #elif defined(ESP8266)
@@ -222,6 +223,7 @@ bool AudioOutputSPDIF::SetPinout(int bclk, int wclk, int dout)
         audioLogger->println("ERROR: Unable to i2s_channel_reconfig_std_gpio()\n");
         return false;
     }
+    audioLogger->printf("SetPinput: %d\n", dout);
     i2s_channel_enable(tx_handle);
     return true;
 #else
@@ -384,12 +386,6 @@ bool AudioOutputSPDIF::ConsumeSample(int16_t sample[2])
 #if defined(ESP32)
   // Assume DMA buffers are multiples of 16 bytes. Either we write all bytes or none.
   size_t bytes_written;
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
-  if(tx_handle == nullptr)
-    return false;
-  
-  esp_err_t ret = i2s_channel_write(tx_handle, (const char*)&buf, 8 * 2, &bytes_written, 0);
-#else
   uint32_t tmp;
   tmp = buf[0];
   buf[0] = buf[1];
@@ -399,6 +395,12 @@ bool AudioOutputSPDIF::ConsumeSample(int16_t sample[2])
   buf[2] = buf[3];
   buf[3] = tmp;
   
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+  if(tx_handle == nullptr)
+    return false;
+  
+  esp_err_t ret = i2s_channel_write(tx_handle, (const char*)&buf, 8 * 2, &bytes_written, 0);
+#else
   esp_err_t ret = i2s_write((i2s_port_t)portNo, (const char*)&buf, 8 * 2, &bytes_written, 0);
   // If we didn't write all bytes, return false early and do not increment frame_num
 #endif
