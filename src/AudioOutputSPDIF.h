@@ -31,6 +31,9 @@
 */
 
 #if defined(ESP32) || defined(ESP8266)
+#if defined(ESP32) && ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+  #include "driver/i2s_std.h"
+#endif
 #pragma once
 
 #include "AudioOutput.h"
@@ -51,6 +54,7 @@ class AudioOutputSPDIF : public AudioOutput
     AudioOutputSPDIF(int dout_pin=SPDIF_OUT_PIN_DEFAULT, int port=0, int dma_buf_count = DMA_BUF_COUNT_DEFAULT);
     virtual ~AudioOutputSPDIF() override;
     bool SetPinout(int bclkPin, int wclkPin, int doutPin);
+    bool SetPinout(int doutPin);
     virtual bool SetRate(int hz) override;
     virtual bool SetBitsPerSample(int bits) override;
     virtual bool SetChannels(int channels) override;
@@ -71,6 +75,12 @@ class AudioOutputSPDIF : public AudioOutput
     bool i2sOn;
     uint8_t frame_num;
     uint8_t rate_multiplier;
+
+  #ifdef ESP32
+  #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+    i2s_chan_handle_t tx_handle = nullptr;
+  #endif
+#endif
 };
 
 #endif // _AUDIOOUTPUTSPDIF_H

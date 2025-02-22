@@ -20,9 +20,12 @@
 
 #include <Arduino.h>
 #ifdef ESP32
-  #if __has_include(<driver/i2s_std.h>)
+  #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
   #else
    #include <driver/i2s.h>
+  #endif
+  #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+   #include <driver/i2s_pdm.h>
   #endif
 #elif defined(ARDUINO_ARCH_RP2040) || ARDUINO_ESP8266_MAJOR >= 3
   #include <I2S.h>
@@ -83,23 +86,20 @@ bool AudioOutputI2S::SetPinout()
     if (output_mode == INTERNAL_DAC || output_mode == INTERNAL_PDM)
       return false; // Not allowed
 
-  #if __has_include(<driver/i2s_std.h>)
+  #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
   
     if (!i2sOn || tx_handle == nullptr)
       return false;
       
-    i2s_std_gpio_config_t std_gpio = {
-        .mclk = use_mclk ? (gpio_num_t)mclkPin : I2S_GPIO_UNUSED,
-        .bclk = (gpio_num_t)bclkPin,
-        .ws = (gpio_num_t)wclkPin,
-        .dout = (gpio_num_t)doutPin,
-        .din = I2S_GPIO_UNUSED,
-        .invert_flags = {
-            .mclk_inv = false,
-            .bclk_inv = false,
-            .ws_inv = false,
-        },
-    };
+    i2s_std_gpio_config_t std_gpio;
+    std_gpio.mclk = use_mclk ? (gpio_num_t)mclkPin : I2S_GPIO_UNUSED;
+    std_gpio.bclk = (gpio_num_t)bclkPin;
+    std_gpio.ws = (gpio_num_t)wclkPin;
+    std_gpio.dout = (gpio_num_t)doutPin;
+    std_gpio.din = I2S_GPIO_UNUSED;
+    std_gpio.invert_flags.mclk_inv = false;
+    std_gpio.invert_flags.bclk_inv = false;
+    std_gpio.invert_flags.ws_inv = false;
     /* Initialize the channel */
     i2s_channel_disable(tx_handle);
     if (i2s_channel_reconfig_std_gpio(tx_handle, &std_gpio) != ESP_OK) {
@@ -117,7 +117,7 @@ bool AudioOutputI2S::SetPinout()
         .bck_io_num = bclkPin,
         .ws_io_num = wclkPin,
         .data_out_num = doutPin,
-        .data_in_num = I2S_GPIO_UNUSED};
+        .data_in_num = I2S_PIN_NO_CHANGE};
     i2s_set_pin((i2s_port_t)portNo, &pins);
   #endif
     return true;
@@ -164,7 +164,7 @@ bool AudioOutputI2S::SetRate(int hz)
   if (i2sOn)
   {
   #ifdef ESP32
-  #if __has_include(<driver/i2s_std.h>)
+  #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
      if(tx_handle == nullptr)
        return false;
      i2s_std_clk_config_t clk_cfg = {
@@ -243,44 +243,56 @@ bool AudioOutputI2S::begin(bool txDAC)
   #ifdef ESP32
     if (!i2sOn)
     {
-  #if __has_include(<driver/i2s_std.h>)
+  #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
       i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG((i2s_port_t)portNo, I2S_ROLE_MASTER);
+      chan_cfg.dma_desc_num = dma_buf_count;
+      chan_cfg.dma_frame_num = 128;
       if (i2s_new_channel(&chan_cfg, &tx_handle, NULL) != ESP_OK) {
         audioLogger->println("ERROR: Unable to install I2S drives\n");
         return false;
       }
 
-      i2s_std_config_t std_cfg = {
-          .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(44100),
-          .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO),
-          .gpio_cfg = {
-            .mclk = use_mclk ? (gpio_num_t)mclkPin : I2S_GPIO_UNUSED,
-            .bclk = (gpio_num_t)bclkPin,
-            .ws = (gpio_num_t)wclkPin,
-            .dout = (gpio_num_t)doutPin,
-            .din = I2S_GPIO_UNUSED,
-          },
-      };
-      std_cfg.slot_cfg.bit_shift = true;
+      if (output_mode == EXTERNAL_I2S) {
+        i2s_std_config_t std_cfg;
+        std_cfg.clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(44100);
+        std_cfg.slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO);
+        std_cfg.gpio_cfg.mclk = use_mclk ? (gpio_num_t)mclkPin : I2S_GPIO_UNUSED;
+        std_cfg.gpio_cfg.bclk = (gpio_num_t)bclkPin;
+        std_cfg.gpio_cfg.ws = (gpio_num_t)wclkPin;
+        std_cfg.gpio_cfg.dout = (gpio_num_t)doutPin;
+        std_cfg.gpio_cfg.din = I2S_GPIO_UNUSED;
+        std_cfg.slot_cfg.bit_shift = true;
   #if SOC_I2S_HW_VERSION_1
-      std_cfg.slot_cfg.msb_right = false;
+        std_cfg.slot_cfg.msb_right = false;
   #else
   #endif
-      if (i2s_channel_init_std_mode(tx_handle, &std_cfg) != ESP_OK) {
-        i2s_del_channel(tx_handle);
-        tx_handle = nullptr;
-        audioLogger->println("ERROR: Unable to install I2S drives\n");
-        return false;
+        if (i2s_channel_init_std_mode(tx_handle, &std_cfg) != ESP_OK) {
+          i2s_del_channel(tx_handle);
+          tx_handle = nullptr;
+          audioLogger->println("ERROR: Unable to install I2S drives\n");
+          return false;
+        }
+      } else if (output_mode == INTERNAL_PDM) {
+        i2s_pdm_tx_config_t pdm_tx_cfg = {
+            .clk_cfg = I2S_PDM_TX_CLK_DEFAULT_CONFIG(44100),
+            .slot_cfg = I2S_PDM_TX_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO),
+            .gpio_cfg = {
+                .clk = (gpio_num_t)wclkPin,
+                .dout = (gpio_num_t)doutPin,
+                .invert_flags = {
+                  .clk_inv = false,
+                },
+            },
+        };
+        if (i2s_channel_init_pdm_tx_mode(tx_handle, &pdm_tx_cfg) != ESP_OK) {
+          i2s_del_channel(tx_handle);
+          tx_handle = nullptr;
+          audioLogger->println("ERROR: Unable to install I2S drives\n");
+          return false;
+        }
       }
 
-      if (output_mode == INTERNAL_DAC || output_mode == INTERNAL_PDM)
-      {
-        return false;
-      }
-      else
-      {
-        SetPinout();
-      }
+      SetPinout();
       i2s_channel_enable(tx_handle);
   #else
       if (use_apll == APLL_AUTO)
@@ -451,7 +463,7 @@ bool AudioOutputI2S::ConsumeSample(int16_t sample[2])
 //    return i2s_write_bytes((i2s_port_t)portNo, (const char *)&s32, sizeof(uint32_t), 0);
 
     size_t i2s_bytes_written;
-  #if __has_include(<driver/i2s_std.h>)
+  #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
     if(tx_handle == nullptr)
       return false;
     i2s_channel_write(tx_handle, (const char*)&s32, sizeof(uint32_t), &i2s_bytes_written, 0);
@@ -492,7 +504,7 @@ bool AudioOutputI2S::stop()
     return false;
 
   #ifdef ESP32
-  #if __has_include(<driver/i2s_std.h>)
+  #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
     if(tx_handle != nullptr) {
       i2s_channel_disable(tx_handle);
       i2s_del_channel(tx_handle);
