@@ -53,7 +53,6 @@ class AudioOutputSPDIF : public AudioOutput
   public:
     AudioOutputSPDIF(int dout_pin=SPDIF_OUT_PIN_DEFAULT, int port=0, int dma_buf_count = DMA_BUF_COUNT_DEFAULT);
     virtual ~AudioOutputSPDIF() override;
-    bool SetPinout(int bclkPin, int wclkPin, int doutPin);
     bool SetPinout(int doutPin);
     virtual bool SetRate(int hz) override;
     virtual bool SetBitsPerSample(int bits) override;
@@ -73,8 +72,10 @@ class AudioOutputSPDIF : public AudioOutput
     uint8_t portNo;
     bool mono;
     bool i2sOn;
+    int dma_buf_count;
     uint8_t frame_num;
     uint8_t rate_multiplier;
+    uint8_t doutPin;
 
   #ifdef ESP32
   #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
