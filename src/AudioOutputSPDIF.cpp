@@ -94,6 +94,11 @@ AudioOutputSPDIF::AudioOutputSPDIF(int dout_pin, int port, int dma_buf_count)
   this->i2sOn = false;
   this->dma_buf_count = dma_buf_count;
 
+#if defined(ESP32)
+    rate_multiplier = 2; // 2x32bit words
+#elif defined(ESP8266)
+    rate_multiplier = 4; // 4x16 bit words
+#endif
   //set defaults
   mono = false;
   bps = 16;
@@ -111,7 +116,6 @@ AudioOutputSPDIF::~AudioOutputSPDIF()
 
 bool AudioOutputSPDIF::SetPinout(int dout)
 {
-    this->doutPin = dout;
 #if defined(ESP32)
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
     if (!i2sOn || tx_handle == nullptr)
@@ -135,7 +139,7 @@ bool AudioOutputSPDIF::SetPinout(int dout)
         audioLogger->println("ERROR: Unable to i2s_channel_reconfig_std_gpio()\n");
         return false;
     }
-    audioLogger->printf("SetPinput: %d\n", dout);
+    this->doutPin = dout;
     i2s_channel_enable(tx_handle);
     return true;
 #else
@@ -227,6 +231,7 @@ bool AudioOutputSPDIF::begin()
 {
   if (!i2sOn)
   {
+    int adjustedHz = AdjustI2SRate(this->hertz);
 #if defined(ESP32)
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
     i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG((i2s_port_t)portNo, I2S_ROLE_MASTER);
@@ -240,7 +245,7 @@ bool AudioOutputSPDIF::begin()
     }
     
     i2s_std_config_t std_cfg;
-    std_cfg.clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(AdjustI2SRate(hertz));
+    std_cfg.clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(adjustedHz);
     std_cfg.slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_STEREO);
     std_cfg.gpio_cfg.mclk = I2S_GPIO_UNUSED;
     std_cfg.gpio_cfg.bclk = I2S_GPIO_UNUSED;
@@ -263,7 +268,7 @@ bool AudioOutputSPDIF::begin()
     // Configure ESP32 I2S to roughly compatible to ESP8266 peripheral
     i2s_config_t i2s_config_spdif = {
       .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
-      .sample_rate = 88200, // 2 x sampling_rate 
+      .sample_rate = adjustedHz, // 2 x sampling_rate 
       .bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT, // 32bit words
       .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT, // Right  than left
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 2, 0)
@@ -291,18 +296,15 @@ bool AudioOutputSPDIF::begin()
     }
     i2s_zero_dma_buffer((i2s_port_t)portNo);
 #endif  
-    rate_multiplier = 2; // 2x32bit words
 #elif defined(ESP8266)
     (void) dout_pin;
     if (!I2SDriver.begin(dma_buf_count, DMA_BUF_SIZE_DEFAULT)) {
       audioLogger->println(F("ERROR: Unable to start I2S driver"));
       return false;
     }
-    rate_multiplier = 4; // 4x16 bit words
 #endif
   }
   i2sOn = true;
-  SetRate(hertz); // Default
   return true;
 }
 
