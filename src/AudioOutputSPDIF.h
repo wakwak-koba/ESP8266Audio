@@ -39,7 +39,11 @@
 #include "AudioOutput.h"
 
 #if defined(ESP32)
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+#define SPDIF_OUT_PIN_DEFAULT  1
+#else
 #define SPDIF_OUT_PIN_DEFAULT  27
+#endif
 #define DMA_BUF_COUNT_DEFAULT  8
 #define DMA_BUF_SIZE_DEFAULT   256
 #elif defined(ESP8266)

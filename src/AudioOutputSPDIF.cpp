@@ -93,6 +93,7 @@ AudioOutputSPDIF::AudioOutputSPDIF(int dout_pin, int port, int dma_buf_count)
   this->portNo = port;
   this->i2sOn = false;
   this->dma_buf_count = dma_buf_count;
+  this->doutPin = dout_pin;
 
 #if defined(ESP32)
     rate_multiplier = 2; // 2x32bit words
@@ -116,6 +117,7 @@ AudioOutputSPDIF::~AudioOutputSPDIF()
 
 bool AudioOutputSPDIF::SetPinout(int dout)
 {
+    doutPin = dout;
 #if defined(ESP32)
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
     if (!i2sOn || tx_handle == nullptr)
@@ -125,7 +127,7 @@ bool AudioOutputSPDIF::SetPinout(int dout)
         .mclk = I2S_GPIO_UNUSED,
         .bclk = I2S_GPIO_UNUSED,
         .ws = I2S_GPIO_UNUSED,
-        .dout = (gpio_num_t)dout,
+        .dout = (gpio_num_t)doutPin,
         .din = I2S_GPIO_UNUSED,
         .invert_flags = {
             .mclk_inv = false,
@@ -139,7 +141,6 @@ bool AudioOutputSPDIF::SetPinout(int dout)
         audioLogger->println("ERROR: Unable to i2s_channel_reconfig_std_gpio()\n");
         return false;
     }
-    this->doutPin = dout;
     i2s_channel_enable(tx_handle);
     return true;
 #else
