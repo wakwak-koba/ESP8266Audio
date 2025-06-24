@@ -88,7 +88,7 @@ bool AudioOutputI2S::SetPinout()
 
   #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
   
-    if (!i2sOn || tx_handle == nullptr)
+    if (!i2sOn || tx_handle[portNo] == nullptr)
       return false;
       
     i2s_std_gpio_config_t std_gpio;
@@ -101,12 +101,12 @@ bool AudioOutputI2S::SetPinout()
     std_gpio.invert_flags.bclk_inv = false;
     std_gpio.invert_flags.ws_inv = false;
     /* Initialize the channel */
-    i2s_channel_disable(tx_handle);
-    if (i2s_channel_reconfig_std_gpio(tx_handle, &std_gpio) != ESP_OK) {
+    i2s_channel_disable(tx_handle[portNo]);
+    if (i2s_channel_reconfig_std_gpio(tx_handle[portNo], &std_gpio) != ESP_OK) {
         audioLogger->println("ERROR: Unable to i2s_channel_reconfig_std_gpio()\n");
         return false;
     }
-    i2s_channel_enable(tx_handle);
+    i2s_channel_enable(tx_handle[portNo]);
     return true;
   
   #else
@@ -165,19 +165,19 @@ bool AudioOutputI2S::SetRate(int hz)
   {
   #ifdef ESP32
   #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
-     if(tx_handle == nullptr)
+     if(tx_handle[portNo] == nullptr)
        return false;
      i2s_std_clk_config_t clk_cfg = {
        .sample_rate_hz = AdjustI2SRate(hz),
        .clk_src = i2s_clock_src_t::I2S_CLK_SRC_PLL_160M,
        .mclk_multiple = I2S_MCLK_MULTIPLE_256,
      };
-     i2s_channel_disable(tx_handle);
-     if (i2s_channel_reconfig_std_clock(tx_handle, &clk_cfg) != ESP_OK) {
+     i2s_channel_disable(tx_handle[portNo]);
+     if (i2s_channel_reconfig_std_clock(tx_handle[portNo], &clk_cfg) != ESP_OK) {
         audioLogger->println("ERROR: Unable to i2s_channel_reconfig_std_clock()\n");
         return false;
      }
-     i2s_channel_enable(tx_handle);
+     i2s_channel_enable(tx_handle[portNo]);
   #else
       i2s_set_sample_rates((i2s_port_t)portNo, AdjustI2SRate(hz));
   #endif
@@ -247,7 +247,7 @@ bool AudioOutputI2S::begin(bool txDAC)
       i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG((i2s_port_t)portNo, I2S_ROLE_MASTER);
       chan_cfg.dma_desc_num = dma_buf_count;
       chan_cfg.dma_frame_num = 128;
-      if (i2s_new_channel(&chan_cfg, &tx_handle, NULL) != ESP_OK) {
+      if (i2s_new_channel(&chan_cfg, &tx_handle[portNo], NULL) != ESP_OK) {
         audioLogger->println("ERROR: Unable to install I2S drives\n");
         return false;
       }
@@ -266,9 +266,9 @@ bool AudioOutputI2S::begin(bool txDAC)
         std_cfg.slot_cfg.msb_right = false;
   #else
   #endif
-        if (i2s_channel_init_std_mode(tx_handle, &std_cfg) != ESP_OK) {
-          i2s_del_channel(tx_handle);
-          tx_handle = nullptr;
+        if (i2s_channel_init_std_mode(tx_handle[portNo], &std_cfg) != ESP_OK) {
+          i2s_del_channel(tx_handle[portNo]);
+          tx_handle[portNo] = nullptr;
           audioLogger->println("ERROR: Unable to install I2S drives\n");
           return false;
         }
@@ -284,16 +284,16 @@ bool AudioOutputI2S::begin(bool txDAC)
                 },
             },
         };
-        if (i2s_channel_init_pdm_tx_mode(tx_handle, &pdm_tx_cfg) != ESP_OK) {
-          i2s_del_channel(tx_handle);
-          tx_handle = nullptr;
+        if (i2s_channel_init_pdm_tx_mode(tx_handle[portNo], &pdm_tx_cfg) != ESP_OK) {
+          i2s_del_channel(tx_handle[portNo]);
+          tx_handle[portNo] = nullptr;
           audioLogger->println("ERROR: Unable to install I2S drives\n");
           return false;
         }
       }
 
       SetPinout();
-      i2s_channel_enable(tx_handle);
+      i2s_channel_enable(tx_handle[portNo]);
   #else
       if (use_apll == APLL_AUTO)
       {
@@ -464,9 +464,9 @@ bool AudioOutputI2S::ConsumeSample(int16_t sample[2])
 
     size_t i2s_bytes_written;
   #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
-    if(tx_handle == nullptr)
+    if(tx_handle[portNo] == nullptr)
       return false;
-    i2s_channel_write(tx_handle, (const char*)&s32, sizeof(uint32_t), &i2s_bytes_written, 0);
+    i2s_channel_write(tx_handle[portNo], (const char*)&s32, sizeof(uint32_t), &i2s_bytes_written, 0);
   #else
     i2s_write((i2s_port_t)portNo, (const char*)&s32, sizeof(uint32_t), &i2s_bytes_written, 0);
   #endif
@@ -505,10 +505,10 @@ bool AudioOutputI2S::stop()
 
   #ifdef ESP32
   #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
-    if(tx_handle != nullptr) {
-      i2s_channel_disable(tx_handle);
-      i2s_del_channel(tx_handle);
-      tx_handle = nullptr;
+    if(tx_handle[portNo] != nullptr) {
+      i2s_channel_disable(tx_handle[portNo]);
+      i2s_del_channel(tx_handle[portNo]);
+      tx_handle[portNo] = nullptr;
     }
   #else
     i2s_zero_dma_buffer((i2s_port_t)portNo);

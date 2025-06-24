@@ -79,7 +79,7 @@ class AudioOutputI2S : public AudioOutput
     uint8_t mclkPin;
 
 #if defined(ESP32) && ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
-    i2s_chan_handle_t tx_handle = nullptr;
+    i2s_chan_handle_t tx_handle[2] = { nullptr, nullptr };
 #endif
 
 #if defined(ARDUINO_ARCH_RP2040)

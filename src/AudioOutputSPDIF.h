@@ -83,7 +83,7 @@ class AudioOutputSPDIF : public AudioOutput
 
   #ifdef ESP32
   #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
-    i2s_chan_handle_t tx_handle = nullptr;
+  i2s_chan_handle_t tx_handle[2] = { nullptr, nullptr };
   #endif
 #endif
 };
