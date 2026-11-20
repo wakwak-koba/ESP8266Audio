@@ -31,6 +31,9 @@
 #endif
 #include "AudioOutputI2SNoDAC.h"
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+  typedef int i2s_port_t;
+#endif
 
 #if defined(ARDUINO_ARCH_RP2040)
 //

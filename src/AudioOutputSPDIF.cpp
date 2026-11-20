@@ -52,6 +52,10 @@
 #endif
 #include "AudioOutputSPDIF.h"
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+  typedef int i2s_port_t;
+#endif
+
 // BMC (Biphase Mark Coded) values (bit order reversed, i.e. LSB first)
 static const uint16_t spdif_bmclookup[256] PROGMEM = { 
 	0xcccc, 0x4ccc, 0x2ccc, 0xaccc, 0x34cc, 0xb4cc, 0xd4cc, 0x54cc,

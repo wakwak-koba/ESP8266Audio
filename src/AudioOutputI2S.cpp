@@ -34,6 +34,10 @@
 #endif
 #include "AudioOutputI2S.h"
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+  typedef int i2s_port_t;
+#endif
+
 #if defined(ESP32) || defined(ESP8266)
 AudioOutputI2S::AudioOutputI2S(int port, int output_mode, int dma_buf_count, int use_apll)
 {
